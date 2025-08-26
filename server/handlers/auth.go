@@ -2,12 +2,17 @@ package handlers
 
 import (
 	"os"
+	"strings"
 	"time"
 	"zerodesk/database"
-	"github.com/golang-jwt/jwt/v5"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// TODO: SET COOKIES WHEN STARTING WORKING WITH BACKEND
+
 
 func SignUp(c *fiber.Ctx) error {
 	type User struct {
@@ -43,6 +48,7 @@ func SignUp(c *fiber.Ctx) error {
 		},
 	})
 }
+
 
 
 // SignIn handler
@@ -91,4 +97,43 @@ func SignIn(c *fiber.Ctx) error {
 		"message": "Sign in successful",
 		"token":   signedToken,
 	})
+}
+
+
+func ValidateUser(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing Authorization header"})
+	}
+
+	// Expect format: "Bearer <token>"
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid Authorization header format"})
+	}
+
+	tokenStr := parts[1]
+	secret := os.Getenv("JWT_SECRET")
+
+	// Parse and validate token
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fiber.ErrUnauthorized
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil || !token.Valid {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid or expired token"})
+	}
+
+	// Extract claims and send them back in response
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		return c.JSON(fiber.Map{
+			"valid":  true,
+			"claims": claims,
+		})
+	}
+
+	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token claims"})
 }

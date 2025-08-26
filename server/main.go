@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"zerodesk/database"
 	"zerodesk/middleware"
 	"zerodesk/routers"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 	// "github.com/gofiber/fiber/v2/middleware/logger"
 )
 
@@ -18,7 +18,12 @@ func main() {
 
 	// Init fiber
 	app := fiber.New()
-
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "*", // frontend origin
+		AllowMethods:     "GET,POST,PUT,DELETE",
+		AllowHeaders:     "Origin, Content-Type, Authorization",
+		AllowCredentials: false, // important if using cookies
+	}))
 	// Root route
 	app.Get("/", middleware.ValidateJWT(), func(c *fiber.Ctx) error {
 		log.Println("📢 Root route hit")

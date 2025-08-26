@@ -8,6 +8,7 @@ import (
 
 
 func AuthRoutes(router fiber.Router) {
+	router.Get("/me",handlers.ValidateUser)
 	router.Post("/sign-up",handlers.SignUp)
 	router.Post("/sign-in",handlers.SignIn)
 }
