@@ -71,7 +71,11 @@ cd client
 npm install
 npm run dev
 ```
+### docker
+```bash
+docker run -d --name coturn -p 3478:3478/udp instrumentisto/coturn turnserver -n --no-auth --no-dtls --no-tls --listening-port=3478 --fingerprint
 
+```
 ---
 
 ## 🎮 Usage
